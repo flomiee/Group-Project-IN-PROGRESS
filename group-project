@@ -1,0 +1,63 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import optimize
+from scipy.optimize import curve_fit
+%matplotlib inline
+#data here
+data = np.loadtxt('Radial.txt',skiprows=22)
+time = data[:,0]
+rv = data[:,1]
+rv_err = data[:,2]
+
+#defining best fit parameters here using scipy
+def rv_model(t,A,omega,phi,C):
+    return A * np.sin(omega*t + phi) + C
+initial_guess = [100, 5000,4000, 0]
+params, covariance = curve_fit(rv_model,time, rv, p0=initial_guess)
+A, omega, phi, C = params
+#this is my best fit param key
+print("Best Fit Parameters")
+print("Amplitude:", A)
+print("Omega:", omega)
+print("Phase:", phi)
+print("Offset:", C)
+
+#this is the data and the best fit 'key'
+
+t_fit = np.linspace(min(time), max(time),2455603)
+rv_fit = rv_model(t_fit, A, omega, phi, C)
+
+#fixing and editing Oscillatory model here
+
+plt.figure(figsize=(10,6))
+plt.errorbar(time, rv, yerr=rv_err, fmt='o', label="Observed RV Data", alpha=0.9,elinewidth=1)
+plt.plot(t_fit, rv_fit, color='red', label="Best Fit Oscillatory Model")
+#label of axes here 
+plt.xlabel("Time (HJD)")
+plt.ylabel("Radial Velocity (m/s)")
+plt.title("Radial Velocity Curve Fit")
+plt.legend()
+plt.show()
+
+#this is my residuals chart here with labels
+model_values = rv_model(time, A, omega, phi, C)
+residuals = rv - model_values
+plt.figure(figsize=(10,5))
+plt.scatter(time, residuals)
+plt.axhline(0, linestyle='--')
+plt.xlabel("Time (HJD)")
+plt.ylabel("Residual (m/s)")
+plt.title("Residuals of Radial Velocity Fit")
+plt.show()
+
+#added histogram of residuals here (points closest to line 0)
+
+plt.figure(figsize=(8,5))
+plt.hist(residuals, bins=20)
+plt.xlabel("Residual (m/s)")
+plt.ylabel("Frequency")
+plt.title("Distribution of Residuals")
+plt.show()
+#standard deviation of residuals here
+std_residuals = np.std(residuals)
+print("Standard deviation of residuals:", std_residuals)
